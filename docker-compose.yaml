@@ -1,0 +1,38 @@
+services:
+  api:
+    build:
+      context: .
+    container_name: nl2sql-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://postgres:password@db:5432/nl2sql_app
+      POSTGRES_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+      - ./assets:/app/assets
+
+  db:
+    image: postgres:16-alpine
+    container_name: nl2sql-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: nl2sql_app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nl2sql_app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
